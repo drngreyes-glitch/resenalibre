@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0B10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ReseñaLibre</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUmVzZcOxYUxpYnJlIiwic2hvcnRfbmFtZSI6IlJlc2XDsWFMaWJyZSIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMEEwQjEwIiwidGhlbWVfY29sb3IiOiIjMEEwQjEwIiwiaWNvbnMiOltdfQ==">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0A0B10; --bg2:#12141C; --s:#1A1D27; --s2:#232636; --s3:#2D3148;
+  --b:#363A52; --t:#F1F3F9; --t2:#B0B5C9; --t3:#6B7194;
+  --y:#FFE600; --g:#059669; --gl:#34D399; --bl:#3B82F6; --r:#EF4444; --o:#F59E0B;
+  --radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Outfit',-apple-system,sans-serif;background:var(--bg);color:var(--t);position:fixed;width:100%}
+input,button,textarea,select{font-family:inherit}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto}
+
+/* ── HEADER ── */
+.hdr{padding:14px 18px 10px;background:linear-gradient(180deg,var(--bg2),var(--bg));flex-shrink:0;z-index:10}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.logo{font-weight:900;font-size:1.1rem;letter-spacing:-.5px}
+.logo em{color:var(--y);font-style:normal}
+.badge{font-size:.62rem;font-weight:600;color:var(--t3);background:var(--s);padding:3px 9px;border-radius:20px;border:1px solid var(--s3);transition:all .3s}
+.badge.ok{color:var(--gl);border-color:rgba(52,211,153,.25)}
+.badge.busy{color:var(--o);border-color:rgba(245,158,11,.25)}
+.breadcrumb{font-size:.72rem;color:var(--t3);margin-top:6px;display:flex;align-items:center;gap:5px;min-height:18px}
+.breadcrumb .bc-home{color:var(--y);cursor:pointer;font-weight:700}
+.breadcrumb .bc-sep{opacity:.4}
+.breadcrumb .bc-cur{color:var(--t2);font-weight:600}
+
+/* ── VIEWS ── */
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+
+/* ── PROJECTS VIEW ── */
+.proj-list-wrap{flex:1;overflow-y:auto;padding:10px 18px 80px}
+.proj-list-wrap::-webkit-scrollbar{width:3px}
+.proj-list-wrap::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+
+.proj-card{background:var(--s);border:1px solid var(--s3);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .2s,background .15s;animation:cardIn .35s cubic-bezier(.16,1,.3,1) both}
+.proj-card:active{background:var(--s2)}
+.proj-card.active-proj{border-color:rgba(255,230,0,.35);background:rgba(255,230,0,.04)}
+.proj-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:1px solid var(--s3)}
+.proj-info{flex:1;min-width:0}
+.proj-name{font-size:.95rem;font-weight:700;margin-bottom:2px}
+.proj-meta{font-size:.72rem;color:var(--t3)}
+.proj-arrow{color:var(--t3);font-size:1rem}
+.proj-del{background:none;border:none;color:var(--t3);font-size:.95rem;padding:6px;cursor:pointer;opacity:.5;transition:opacity .2s}
+.proj-del:active{opacity:1;color:var(--r)}
+
+.empty-projs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.empty-icon{width:60px;height:60px;border-radius:18px;background:var(--s);border:1px solid var(--s3);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:14px}
+.empty-projs h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
+.empty-projs p{font-size:.78rem;color:var(--t3);line-height:1.5;max-width:260px}
+
+/* ── PRODUCTS VIEW ── */
+.prod-input-area{padding:10px 18px 0;flex-shrink:0}
+.input-wrap{position:relative;margin-bottom:8px}
+.input-field{width:100%;padding:14px 52px 14px 16px;background:var(--s);border:2px solid var(--s3);border-radius:13px;color:var(--t);font-size:.88rem;font-weight:500;outline:none;transition:border-color .2s,box-shadow .2s}
+.input-field::placeholder{color:var(--t3);font-weight:400}
+.input-field:focus{border-color:var(--y);box-shadow:0 0 0 4px rgba(255,230,0,.07)}
+.go-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:9px;border:none;background:var(--y);color:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.go-btn:active{transform:translateY(-50%) scale(.9)}
+.go-btn svg{width:20px;height:20px}
+.paste-row{display:flex;gap:7px;margin-bottom:10px}
+.paste-btn{flex:1;padding:9px 10px;border-radius:10px;border:1px dashed var(--s3);background:transparent;color:var(--t3);font-size:.75rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s}
+.paste-btn:active{background:var(--s);border-color:var(--y);color:var(--y)}
+
+.resolving{display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,230,0,.06);border:1px solid rgba(255,230,0,.18);border-radius:9px;margin-bottom:8px;font-size:.75rem;color:var(--y);font-weight:600}
+.resolving.show{display:flex}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .7s linear infinite}
+
+.prod-list-wrap{flex:1;overflow-y:auto;padding:4px 18px 100px}
+.prod-list-wrap::-webkit-scrollbar{width:3px}
+.prod-list-wrap::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+
+.empty-prod{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.empty-prod h3{font-size:.9rem;font-weight:700;margin-bottom:6px}
+.empty-prod p{font-size:.76rem;color:var(--t3);line-height:1.5;max-width:250px}
+
+/* ── PRODUCT CARD ── */
+@keyframes cardIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.prod-card{background:var(--s);border:1px solid var(--s3);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;animation:cardIn .35s cubic-bezier(.16,1,.3,1) both}
+.prod-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--y),var(--g));opacity:0;transition:opacity .3s}
+.prod-card.ready::before{opacity:1}
+.pc-rm{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:7px;border:none;background:var(--s2);color:var(--t3);font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.55;transition:all .2s;z-index:2}
+.pc-rm:active{opacity:1;background:var(--r);color:#fff}
+.pc-hdr{display:flex;gap:12px;margin-bottom:12px}
+.pc-img{width:66px;height:66px;border-radius:10px;background:#fff;flex-shrink:0;object-fit:contain;padding:3px;border:1px solid var(--b)}
+.pc-img-ph{width:66px;height:66px;border-radius:10px;background:var(--s2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:1px solid var(--b)}
+.pc-info{flex:1;min-width:0}
+.pc-title{font-size:.84rem;font-weight:700;line-height:1.3;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-price{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;color:var(--g)}
+.pc-old{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--t3);text-decoration:line-through;margin-left:5px}
+.pc-disc{font-size:.62rem;font-weight:700;color:var(--bg);background:var(--g);padding:2px 5px;border-radius:5px;margin-left:4px}
+.pc-sub{font-size:.68rem;color:var(--t3);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.pc-specs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
+.pc-spec{font-size:.62rem;color:var(--t2);background:var(--s2);padding:3px 7px;border-radius:5px;white-space:nowrap}
+
+/* affiliate input */
+.aff-wrap{margin-bottom:10px}
+.aff-label{font-size:.62rem;font-weight:700;color:var(--t3);letter-spacing:.4px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.aff-saved{color:var(--gl);font-size:.65rem}
+.aff-row{display:flex;align-items:center;background:var(--s2);border:1px solid var(--s3);border-radius:9px;padding:8px 11px;gap:7px;transition:border-color .2s}
+.aff-row:focus-within{border-color:rgba(255,230,0,.35)}
+.aff-input{flex:1;background:transparent;border:none;outline:none;color:var(--t2);font-size:.7rem;font-family:'JetBrains Mono',monospace;min-width:0}
+.aff-input::placeholder{color:var(--b);font-family:'Outfit',sans-serif;font-size:.7rem}
+
+/* actions */
+.pc-acts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pc-btn{padding:11px;border:none;border-radius:9px;font-weight:700;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.pc-btn:active{transform:scale(.96)}
+.pc-btn--dl{background:var(--y);color:var(--bg);grid-column:1/-1;font-size:.82rem;padding:13px}
+.pc-btn--link{background:var(--s2);color:var(--t2);border:1px solid var(--b)}
+.pc-btn--rm2{background:rgba(239,68,68,.1);color:var(--r);border:1px solid rgba(239,68,68,.2)}
+.pc-btn.copied,.pc-btn.done{background:var(--g)!important;color:#fff!important}
+
+/* loading */
+.loading-card{background:var(--s);border:1px solid var(--s3);border-radius:14px;padding:18px;margin-bottom:10px;display:flex;gap:12px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.sk{background:var(--s2);border-radius:7px}
+.sk-img{width:66px;height:66px;flex-shrink:0;border-radius:10px}
+.sk-lines{flex:1;display:flex;flex-direction:column;gap:7px}
+.sk-line{height:11px;border-radius:5px}
+.sk-line:nth-child(1){width:82%}.sk-line:nth-child(2){width:48%}.sk-line:nth-child(3){width:60%}
+
+/* error */
+.err-card{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:11px;font-size:.8rem}
+.err-msg{color:var(--r);line-height:1.4}
+.err-url{font-family:'JetBrains Mono',monospace;font-size:.67rem;color:var(--t3);word-break:break-all;margin-top:3px}
+
+/* ── BOTTOM BARS ── */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;z-index:50;padding:11px 18px;padding-bottom:max(11px,env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--s3);display:none}
+.bottom-bar.show{display:block;animation:slideUp .28s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+
+/* projects bottom bar */
+.proj-bar-actions{display:grid;grid-template-columns:1fr auto;gap:8px}
+.new-proj-btn{padding:14px;border:none;border-radius:12px;background:var(--y);color:var(--bg);font-weight:800;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.new-proj-btn:active{transform:scale(.97)}
+.export-all-btn{padding:14px 16px;border:none;border-radius:12px;background:var(--s);color:var(--t2);border:1px solid var(--s3);font-weight:700;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.export-all-btn:active{background:var(--s2)}
+
+/* products bottom bar */
+.prod-bar-info{text-align:center;font-size:.72rem;color:var(--t3);margin-bottom:8px}
+.prod-bar-info strong{color:var(--y)}
+.prod-bar-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.bar-btn{padding:13px;border:none;border-radius:11px;font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.bar-btn:active{transform:scale(.97)}
+.bar-btn--md{background:var(--y);color:var(--bg);grid-column:1/-1}
+.bar-btn--txt{background:var(--bl);color:#fff}
+.bar-btn--clear{background:var(--s);color:var(--t3);border:1px solid var(--s3)}
+.bar-btn.done{background:var(--g)!important;color:#fff!important}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--s3);border-radius:20px 20px 0 0;padding:22px 18px;padding-bottom:max(22px,env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:5px}
+.modal-sub{font-size:.76rem;color:var(--t3);line-height:1.4;margin-bottom:16px}
+.modal-input{width:100%;padding:13px 15px;background:var(--s);border:2px solid var(--s3);border-radius:11px;color:var(--t);font-size:.9rem;outline:none;margin-bottom:10px;transition:border-color .2s}
+.modal-input:focus{border-color:var(--y)}
+.modal-input::placeholder{color:var(--t3)}
+.emoji-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.emoji-opt{width:40px;height:40px;border-radius:10px;border:2px solid var(--s3);background:var(--s);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.emoji-opt.sel{border-color:var(--y);background:rgba(255,230,0,.1)}
+.modal-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-btn{padding:13px;border:none;border-radius:11px;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .15s}
+.modal-btn:active{transform:scale(.97)}
+.modal-btn--ok{background:var(--y);color:var(--bg)}
+.modal-btn--cancel{background:var(--s);color:var(--t2);border:1px solid var(--s3)}
+
+/* save-to-project modal select */
+.proj-select{width:100%;padding:13px 15px;background:var(--s);border:2px solid var(--s3);border-radius:11px;color:var(--t);font-size:.88rem;outline:none;margin-bottom:16px;appearance:none;transition:border-color .2s}
+.proj-select:focus{border-color:var(--y)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--s);border:1px solid var(--g);color:var(--gl);padding:9px 18px;border-radius:11px;font-size:.8rem;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:all .28s cubic-bezier(.16,1,.3,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="logo">Reseña<em>Libre</em></div>
+      <div class="badge ok" id="badge">● Listo</div>
+    </div>
+    <div class="breadcrumb" id="breadcrumb">
+      <span style="color:var(--t3)">Mis proyectos</span>
+    </div>
+  </div>
+
+  <!-- ══ VIEW: PROJECTS ══ -->
+  <div class="view active" id="viewProjects">
+    <div class="proj-list-wrap" id="projList">
+      <div class="empty-projs" id="emptyProjs" style="display:none">
+        <div class="empty-icon">📁</div>
+        <h3>Sin proyectos aún</h3>
+        <p>Crea un proyecto para organizar tus productos por categoría</p>
+      </div>
+    </div>
+    <div class="bottom-bar show" id="barProjects">
+      <div class="proj-bar-actions">
+        <button class="new-proj-btn" onclick="openNewProjModal()">＋ Nuevo proyecto</button>
+        <button class="export-all-btn" onclick="exportAll()" title="Exportar todo">⬇ Todo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW: PRODUCTS ══ -->
+  <div class="view" id="viewProducts">
+    <div class="prod-input-area">
+      <div class="input-wrap">
+        <input type="text" class="input-field" id="urlInput"
+          placeholder="URL de ML, link meli.la o ID (MLM...)"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="go-btn" onclick="processInput()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+      <div class="resolving" id="resolvingBadge">
+        <span class="spin">⟳</span> Resolviendo link de afiliado...
+      </div>
+      <div class="paste-row">
+        <button class="paste-btn" onclick="pasteAndProcess()">📋 Pegar y extraer</button>
+        <button class="paste-btn" onclick="openSaveModal()" style="border-color:rgba(255,230,0,.3);color:var(--y);background:rgba(255,230,0,.04)">📤 Guardar seleccionado</button>
+      </div>
+    </div>
+
+    <div class="prod-list-wrap" id="prodList">
+      <div class="empty-prod" id="emptyProd">
+        <div class="empty-icon" style="margin:0 auto 12px">📦</div>
+        <h3>Sin productos</h3>
+        <p>Pega una URL de ML o tu link <strong style="color:var(--y)">meli.la</strong> para extraer automáticamente</p>
+      </div>
+    </div>
+
+    <div class="bottom-bar" id="barProducts">
+      <div class="prod-bar-info"><strong id="prodCount">0</strong> productos en este proyecto</div>
+      <div class="prod-bar-actions">
+        <button class="bar-btn bar-btn--md" onclick="exportProject('md')">⬇ Descargar .md</button>
+        <button class="bar-btn bar-btn--txt" onclick="exportProject('txt')">⬇ Descargar .txt</button>
+        <button class="bar-btn bar-btn--clear" onclick="clearProject()">🗑 Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: New Project -->
+<div class="overlay" id="modalNewProj" onclick="closeModalIf(event,'modalNewProj')">
+  <div class="modal">
+    <div class="modal-title">Nuevo proyecto</div>
+    <div class="modal-sub">Dale un nombre y elige un ícono para identificarlo fácilmente</div>
+    <input type="text" class="modal-input" id="newProjName" placeholder="Ej: Audífonos, Laptops, Celulares..." maxlength="40">
+    <div class="emoji-row" id="emojiRow"></div>
+    <div class="modal-acts">
+      <button class="modal-btn modal-btn--cancel" onclick="closeModal('modalNewProj')">Cancelar</button>
+      <button class="modal-btn modal-btn--ok" onclick="createProject()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Save product to project -->
+<div class="overlay" id="modalSave" onclick="closeModalIf(event,'modalSave')">
+  <div class="modal">
+    <div class="modal-title">Guardar en proyecto</div>
+    <div class="modal-sub">Elige el proyecto donde guardar los productos seleccionados</div>
+    <select class="proj-select" id="saveSelect"></select>
+    <div class="modal-acts">
+      <button class="modal-btn modal-btn--cancel" onclick="closeModal('modalSave')">Cancelar</button>
+      <button class="modal-btn modal-btn--ok" onclick="saveToProject()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+const STORAGE_KEY = 'rl_projects_v2';
+let state = loadState();
+let currentProjId = null;   // which project is open
+let stagingProducts = [];   // products extracted but not yet in a project
+const EMOJIS = ['🎧','💻','📱','🖥️','📷','🎮','🔌','🎒','🏠','👟','⌚','🍳','📚','🎵','💡','🛒'];
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { projects: [] }; }
+  catch { return { projects: [] }; }
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// ════════════════════════════════════════
+//  ML API
+// ════════════════════════════════════════
+const ML_API = 'https://api.mercadolibre.com/items/';
+
+function isMeliAffiliate(s) {
+  if (/meli\.la\//i.test(s)) return true;
+  if (/mercadolibre\.com/i.test(s) && /matt_|tracking_id|reco_id|wid=MLM/i.test(s)) return true;
+  return false;
+}
+
+function extractMLMId(s) {
+  if (!s) return null;
+  s = s.trim();
+  if (/^MLM\d{6,15}$/i.test(s)) return s.toUpperCase();
+  // wid=MLM param (affiliate tracking URLs)
+  let m = s.match(/[?&]wid=(MLM\d+)/i);
+  if (m) return m[1].toUpperCase();
+  // /p/MLM group URL
+  m = s.match(/\/p\/(MLM\d+)/i);
+  if (m) return m[1].toUpperCase();
+  // MLM digits anywhere
+  m = s.match(/MLM[-]?(\d{6,15})/i);
+  if (m) return 'MLM' + m[1].replace(/-/g,'');
+  m = s.match(/MLM\s*[-_]?\s*(\d{6,})/i);
+  if (m) return 'MLM' + m[1];
+  return null;
+}
+
+// ── CONFIGURA AQUÍ tu Worker URL después de desplegarlo ──
+const WORKER_URL = 'TU_WORKER_URL_AQUI'; // ej: https://resenalibre.tunombre.workers.dev
+
+async function resolveAffiliateLink(shortUrl) {
+  if (!WORKER_URL || WORKER_URL === 'TU_WORKER_URL_AQUI') {
+    throw new Error('Configura el WORKER_URL en la PWA. Sigue las instrucciones de instalación del Worker.');
+  }
+  const resp = await fetch(`${WORKER_URL}?url=${encodeURIComponent(shortUrl)}`, {
+    signal: AbortSignal.timeout(8000)
+  });
+  const data = await resp.json();
+  if (data.ok && data.mlm_id) {
+    return { mlmId: data.mlm_id, resolvedUrl: data.final_url };
+  }
+  throw new Error(data.error || 'El Worker no pudo resolver el link.');
+}
+
+async function fetchProduct(mlmId) {
+  const resp = await fetch(ML_API + mlmId);
+  if (!resp.ok) throw new Error(`API error ${resp.status}`);
+  const data = await resp.json();
+  if (data.error) throw new Error(data.message || data.error);
+
+  const specs = {};
+  if (data.attributes) {
+    data.attributes.forEach(a => {
+      if (a.value_name && a.value_name !== '-' && a.value_name !== 'null')
+        specs[a.name] = a.value_name;
+    });
+  }
+  const img = data.pictures?.length > 0
+    ? (data.pictures[0].secure_url || data.pictures[0].url).replace('-I.jpg','-O.jpg') : null;
+  const discount = data.original_price && data.original_price > data.price
+    ? Math.round(((data.original_price - data.price) / data.original_price) * 100) : 0;
+
+  return {
+    id: data.id, title: data.title, price: data.price,
+    old_price: data.original_price || 0, discount,
+    currency: data.currency_id || 'MXN',
+    condition: data.condition === 'new' ? 'Nuevo' : 'Usado',
+    sold: data.sold_quantity || 0, permalink: data.permalink,
+    thumbnail: img, specs, warranty: data.warranty || '',
+    affiliate_link: '', fetched_at: new Date().toISOString(),
+  };
+}
+
+// ════════════════════════════════════════
+//  PROCESS INPUT
+// ════════════════════════════════════════
+async function processInput(rawVal) {
+  const input = (rawVal !== undefined ? rawVal : document.getElementById('urlInput').value).trim();
+  if (!input) return;
+  document.getElementById('urlInput').value = '';
+
+  let mlmId = null, affiliateLink = '';
+
+  if (isMeliAffiliate(input)) {
+    affiliateLink = input;
+    setBadge('Resolviendo...', 'busy');
+    document.getElementById('resolvingBadge').classList.add('show');
+    try {
+      const r = await resolveAffiliateLink(input);
+      mlmId = r.mlmId;
+    } catch(e) {
+      document.getElementById('resolvingBadge').classList.remove('show');
+      showError(input, e.message); setBadge('● Listo','ok'); return;
+    }
+    document.getElementById('resolvingBadge').classList.remove('show');
+  } else {
+    mlmId = extractMLMId(input);
+  }
+
+  if (!mlmId) { showError(input, 'No encontré un ID de producto. Pega la URL de ML, tu link meli.la o el ID (MLM...).'); return; }
+
+  // Check dupes across staging + current project
+  const allIds = [...stagingProducts.map(p=>p.id),
+    ...(currentProjId ? (state.projects.find(p=>p.id===currentProjId)?.products||[]).map(p=>p.id) : [])];
+  if (allIds.includes(mlmId)) { showToast('⚠️ Ya tienes este producto'); return; }
+
+  showLoading(mlmId);
+  setBadge('Cargando...','busy');
+  document.getElementById('emptyProd').style.display = 'none';
+
+  try {
+    const product = await fetchProduct(mlmId);
+    product.affiliate_link = affiliateLink;
+    // If we're inside a project, save directly there
+    if (currentProjId) {
+      const proj = state.projects.find(p=>p.id===currentProjId);
+      if (proj) { proj.products.push(product); saveState(); }
+    } else {
+      stagingProducts.push(product);
+    }
+    removeLoading(mlmId);
+    renderProductCard(product, true);
+    updateProdBar();
+    setBadge('● Listo','ok');
+    showToast('✅ ' + mlmId + ' extraído');
+  } catch(e) {
+    removeLoading(mlmId);
+    showError(input, e.message);
+    setBadge('● Listo','ok');
+  }
+}
+
+async function pasteAndProcess() {
+  try {
+    const t = await navigator.clipboard.readText();
+    if (t) { document.getElementById('urlInput').value = t; processInput(); }
+  } catch { showToast('⚠️ Permite acceso al portapapeles'); }
+}
+
+// ════════════════════════════════════════
+//  RENDER PRODUCT CARD
+// ════════════════════════════════════════
+function renderProductCard(p, animate) {
+  const list = document.getElementById('prodList');
+  document.getElementById('emptyProd').style.display = 'none';
+  const specsHtml = Object.entries(p.specs).slice(0,5).map(([k,v])=>`<span class="pc-spec">${k}: ${v}</span>`).join('');
+
+  const card = document.createElement('div');
+  card.className = 'prod-card ready';
+  card.id = 'card_'+p.id;
+  if (!animate) card.style.animation = 'none';
+  card.innerHTML = `
+    <button class="pc-rm" onclick="removeProduct('${p.id}')">✕</button>
+    <div class="pc-hdr">
+      ${p.thumbnail ? `<img class="pc-img" src="${p.thumbnail}" loading="lazy">` : `<div class="pc-img-ph">📦</div>`}
+      <div class="pc-info">
+        <div class="pc-title">${esc(p.title)}</div>
+        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:2px;margin-bottom:3px">
+          <span class="pc-price">$${p.price.toLocaleString('es-MX')}</span>
+          ${p.old_price>p.price?`<span class="pc-old">$${p.old_price.toLocaleString('es-MX')}</span>`:''}
+          ${p.discount>0?`<span class="pc-disc">-${p.discount}%</span>`:''}
+        </div>
+        <div class="pc-sub">${p.id} · ${p.sold.toLocaleString()}+ vendidos · ${p.condition}</div>
+      </div>
+    </div>
+    ${specsHtml?`<div class="pc-specs">${specsHtml}</div>`:''}
+    <div class="aff-wrap">
+      <div class="aff-label">🔗 Link afiliado
+        <span class="aff-saved" id="affsaved_${p.id}">${p.affiliate_link?'✅ guardado':''}</span>
+      </div>
+      <div class="aff-row">
+        <input class="aff-input" id="aff_${p.id}" type="url"
+          placeholder="Pega tu link meli.la aquí..."
+          value="${esc(p.affiliate_link||'')}"
+          oninput="syncAffiliate('${p.id}',this.value)"
+        >
+      </div>
+    </div>
+    <div class="pc-acts">
+      <button class="pc-btn pc-btn--dl" onclick="downloadSingle('${p.id}')">⬇ Descargar .md individual</button>
+      <button class="pc-btn pc-btn--link" onclick="openML('${p.id}')">🔗 Ver en ML</button>
+      <button class="pc-btn pc-btn--rm2" onclick="removeProduct('${p.id}')">🗑 Quitar</button>
+    </div>
+  `;
+  list.appendChild(card);
+}
+
+function syncAffiliate(id, val) {
+  const p = getProduct(id);
+  if (!p) return;
+  p.affiliate_link = val.trim();
+  const badge = document.getElementById('affsaved_'+id);
+  if (badge) badge.textContent = val.trim() ? '✅ guardado' : '';
+  if (currentProjId) saveState();
+}
+
+function getProduct(id) {
+  // Try current project first
+  if (currentProjId) {
+    const proj = state.projects.find(p=>p.id===currentProjId);
+    if (proj) { const p = proj.products.find(p=>p.id===id); if(p) return p; }
+  }
+  return stagingProducts.find(p=>p.id===id);
+}
+
+function getCurrentProducts() {
+  if (currentProjId) {
+    return state.projects.find(p=>p.id===currentProjId)?.products || [];
+  }
+  return stagingProducts;
+}
+
+function removeProduct(id) {
+  if (currentProjId) {
+    const proj = state.projects.find(p=>p.id===currentProjId);
+    if (proj) { proj.products = proj.products.filter(p=>p.id!==id); saveState(); }
+  } else {
+    stagingProducts = stagingProducts.filter(p=>p.id!==id);
+  }
+  const card = document.getElementById('card_'+id);
+  if (card) { card.style.opacity='0'; card.style.transform='scale(.95)'; setTimeout(()=>card.remove(),200); }
+  updateProdBar();
+  if (getCurrentProducts().length===0) document.getElementById('emptyProd').style.display='';
+}
+
+function openML(id) {
+  const p = getProduct(id);
+  if (p?.permalink) window.open(p.permalink,'_blank');
+}
+
+// ════════════════════════════════════════
+//  PROJECTS NAVIGATION
+// ════════════════════════════════════════
+function renderProjectsList() {
+  const list = document.getElementById('projList');
+  const empty = document.getElementById('emptyProjs');
+  list.innerHTML = '';
+  if (state.projects.length === 0) { empty.style.display=''; list.appendChild(empty); return; }
+  empty.style.display = 'none';
+  state.projects.forEach(proj => {
+    const card = document.createElement('div');
+    card.className = 'proj-card';
+    card.innerHTML = `
+      <div class="proj-icon" style="background:rgba(255,230,0,.07)">${proj.emoji}</div>
+      <div class="proj-info">
+        <div class="proj-name">${esc(proj.name)}</div>
+        <div class="proj-meta">${proj.products.length} producto${proj.products.length!==1?'s':''} · ${proj.products.filter(p=>p.affiliate_link).length} con afiliado</div>
+      </div>
+      <span class="proj-arrow">›</span>
+      <button class="proj-del" onclick="deleteProject(event,'${proj.id}')">🗑</button>
+    `;
+    card.addEventListener('click', () => openProject(proj.id));
+    list.appendChild(card);
+  });
+}
+
+function openProject(projId) {
+  currentProjId = projId;
+  const proj = state.projects.find(p=>p.id===projId);
+  if (!proj) return;
+
+  // Switch view
+  document.getElementById('viewProjects').classList.remove('active');
+  document.getElementById('viewProducts').classList.add('active');
+  document.getElementById('barProjects').classList.remove('show');
+
+  // Breadcrumb
+  document.getElementById('breadcrumb').innerHTML = `
+    <span class="bc-home" onclick="goHome()">Proyectos</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-cur">${proj.emoji} ${esc(proj.name)}</span>
+  `;
+
+  // Render products
+  document.getElementById('prodList').innerHTML = '';
+  if (proj.products.length === 0) {
+    document.getElementById('emptyProd').style.display = '';
+  } else {
+    document.getElementById('emptyProd').style.display = 'none';
+    proj.products.forEach(p => renderProductCard(p, false));
+  }
+  updateProdBar();
+}
+
+function goHome() {
+  currentProjId = null;
+  stagingProducts = [];
+  document.getElementById('viewProducts').classList.remove('active');
+  document.getElementById('viewProjects').classList.add('active');
+  document.getElementById('barProducts').classList.remove('show');
+  document.getElementById('barProjects').classList.add('show');
+  document.getElementById('breadcrumb').innerHTML = `<span style="color:var(--t3)">Mis proyectos</span>`;
+  document.getElementById('urlInput').value = '';
+  renderProjectsList();
+}
+
+function deleteProject(e, projId) {
+  e.stopPropagation();
+  if (!confirm('¿Eliminar este proyecto y todos sus productos?')) return;
+  state.projects = state.projects.filter(p=>p.id!==projId);
+  saveState();
+  renderProjectsList();
+  showToast('🗑 Proyecto eliminado');
+}
+
+// ════════════════════════════════════════
+//  NEW PROJECT MODAL
+// ════════════════════════════════════════
+let selectedEmoji = '📦';
+function openNewProjModal() {
+  selectedEmoji = '📦';
+  document.getElementById('newProjName').value = '';
+  // Render emoji picker
+  const row = document.getElementById('emojiRow');
+  row.innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-opt${e===selectedEmoji?' sel':''}" onclick="pickEmoji('${e}',this)">${e}</button>`
+  ).join('');
+  showModal('modalNewProj');
+  setTimeout(()=>document.getElementById('newProjName').focus(),300);
+}
+function pickEmoji(e, btn) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function createProject() {
+  const name = document.getElementById('newProjName').value.trim();
+  if (!name) { document.getElementById('newProjName').focus(); return; }
+  const proj = { id: 'p'+Date.now(), name, emoji: selectedEmoji, products: [], created: new Date().toISOString() };
+  state.projects.unshift(proj);
+  saveState();
+  closeModal('modalNewProj');
+  renderProjectsList();
+  showToast('✅ Proyecto "'+name+'" creado');
+  // Open it immediately
+  openProject(proj.id);
+}
+
+// ════════════════════════════════════════
+//  SAVE TO PROJECT (from staging)
+// ════════════════════════════════════════
+function openSaveModal() {
+  if (state.projects.length === 0) {
+    showToast('⚠️ Primero crea un proyecto'); openNewProjModal(); return;
+  }
+  const sel = document.getElementById('saveSelect');
+  sel.innerHTML = state.projects.map(p=>`<option value="${p.id}">${p.emoji} ${esc(p.name)}</option>`).join('');
+  showModal('modalSave');
+}
+function saveToProject() {
+  const projId = document.getElementById('saveSelect').value;
+  const proj = state.projects.find(p=>p.id===projId);
+  if (!proj) return;
+  const toSave = currentProjId ? [] : stagingProducts;
+  if (toSave.length === 0) { showToast('⚠️ No hay productos para guardar'); closeModal('modalSave'); return; }
+  toSave.forEach(p => {
+    if (!proj.products.find(x=>x.id===p.id)) proj.products.push(p);
+  });
+  saveState();
+  closeModal('modalSave');
+  showToast(`✅ ${toSave.length} producto(s) guardados en "${proj.name}"`);
+  stagingProducts = [];
+  goHome();
+}
+
+// ════════════════════════════════════════
+//  EXPORT / DOWNLOAD
+// ════════════════════════════════════════
+function generateProductMd(p) {
+  // Sync affiliate field from DOM if visible
+  const affEl = document.getElementById('aff_'+p.id);
+  const aff = affEl ? affEl.value.trim() : (p.affiliate_link||'');
+
+  let md = `# ${p.title}\n\n`;
+  md += `**ID:** \`${p.id}\`  \n`;
+  md += `**Precio:** $${p.price.toLocaleString('es-MX')} ${p.currency}`;
+  if (p.old_price > p.price) md += `  ~~$${p.old_price.toLocaleString('es-MX')}~~  (-${p.discount}%)`;
+  md += `  \n`;
+  md += `**Condición:** ${p.condition}  \n`;
+  md += `**Vendidos:** ${p.sold.toLocaleString()}+  \n`;
+  if (p.warranty) md += `**Garantía:** ${p.warranty}  \n`;
+  md += `  \n`;
+  md += `**Link ML (para Claude):** ${p.permalink}  \n`;
+  md += `**Link afiliado:** ${aff || '_pendiente_'}  \n`;
+  if (Object.keys(p.specs).length > 0) {
+    md += `\n## Especificaciones\n\n`;
+    Object.entries(p.specs).forEach(([k,v]) => { md += `- **${k}:** ${v}\n`; });
+  }
+  md += `\n---\n_Extraído: ${new Date(p.fetched_at).toLocaleString('es-MX')}_\n`;
+  return md;
+}
+
+function generateProjectMd(proj) {
+  let md = `# Proyecto: ${proj.emoji} ${proj.name}\n\n`;
+  md += `**Productos:** ${proj.products.length}  \n`;
+  md += `**Generado:** ${new Date().toLocaleString('es-MX')}  \n\n`;
+  md += `---\n\n`;
+  proj.products.forEach((p, i) => {
+    md += generateProductMd(p);
+    if (i < proj.products.length - 1) md += `\n\n`;
+  });
+  return md;
+}
+
+function generateProjectTxt(proj) {
+  let txt = `PROYECTO: ${proj.name.toUpperCase()}\n${'='.repeat(50)}\n\n`;
+  proj.products.forEach((p, i) => {
+    const affEl = document.getElementById('aff_'+p.id);
+    const aff = affEl ? affEl.value.trim() : (p.affiliate_link||'');
+    txt += `[${i+1}] ${p.title}\n`;
+    txt += `    ID: ${p.id}\n`;
+    txt += `    Precio: $${p.price.toLocaleString('es-MX')} ${p.currency}\n`;
+    txt += `    Condición: ${p.condition} · ${p.sold.toLocaleString()}+ vendidos\n`;
+    if (p.warranty) txt += `    Garantía: ${p.warranty}\n`;
+    txt += `    Link ML: ${p.permalink}\n`;
+    txt += `    Link afiliado: ${aff || 'PENDIENTE'}\n`;
+    if (Object.keys(p.specs).length > 0) {
+      txt += `    Especificaciones:\n`;
+      Object.entries(p.specs).forEach(([k,v]) => { txt += `      ${k}: ${v}\n`; });
+    }
+    txt += `\n`;
+  });
+  return txt;
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type: type+';charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+
+function exportProject(fmt) {
+  const proj = state.projects.find(p=>p.id===currentProjId);
+  if (!proj || proj.products.length===0) { showToast('⚠️ No hay productos para exportar'); return; }
+  const slug = proj.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  if (fmt==='md') {
+    downloadFile(generateProjectMd(proj), `${slug}.md`, 'text/markdown');
+    showToast('✅ Descargando '+slug+'.md');
+  } else {
+    downloadFile(generateProjectTxt(proj), `${slug}.txt`, 'text/plain');
+    showToast('✅ Descargando '+slug+'.txt');
+  }
+}
+
+function downloadSingle(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  const slug = p.id.toLowerCase();
+  downloadFile(generateProductMd(p), `${slug}.md`, 'text/markdown');
+  showToast('✅ Descargando '+slug+'.md');
+}
+
+function exportAll() {
+  if (state.projects.length===0) { showToast('⚠️ No hay proyectos'); return; }
+  let all = `# ReseñaLibre — Exportación completa\n_${new Date().toLocaleString('es-MX')}_\n\n---\n\n`;
+  state.projects.forEach(proj => { all += generateProjectMd(proj) + '\n\n---\n\n'; });
+  downloadFile(all, 'resenalibre-export.md', 'text/markdown');
+  showToast('✅ Exportación completa descargada');
+}
+
+function clearProject() {
+  if (!currentProjId) { stagingProducts=[]; }
+  else {
+    const proj = state.projects.find(p=>p.id===currentProjId);
+    if (proj) { proj.products=[]; saveState(); }
+  }
+  document.getElementById('prodList').innerHTML='';
+  document.getElementById('emptyProd').style.display='';
+  updateProdBar();
+}
+
+// ════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════
+function showLoading(mlmId) {
+  const list = document.getElementById('prodList');
+  list.insertAdjacentHTML('beforeend',`
+    <div class="loading-card" id="load_${mlmId}">
+      <div class="sk sk-img"></div>
+      <div class="sk-lines">
+        <div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div>
+      </div>
+    </div>`);
+}
+function removeLoading(mlmId) {
+  document.getElementById('load_'+mlmId)?.remove();
+}
+function showError(input, msg) {
+  const list = document.getElementById('prodList');
+  const el = document.createElement('div');
+  el.className='err-card';
+  el.innerHTML=`<span style="font-size:1.1rem;flex-shrink:0">⚠️</span><div><div class="err-msg">${esc(msg)}</div><div class="err-url">${esc(input.substring(0,100))}</div></div>`;
+  list.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},5000);
+}
+function updateProdBar() {
+  const prods = getCurrentProducts();
+  document.getElementById('prodCount').textContent = prods.length;
+  const bar = document.getElementById('barProducts');
+  if (prods.length > 0) bar.classList.add('show'); else bar.classList.remove('show');
+}
+function setBadge(text, state) {
+  const b = document.getElementById('badge');
+  b.textContent = text;
+  b.className = 'badge ' + (state||'');
+}
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeModalIf(e, id) { if (e.target===document.getElementById(id)) closeModal(id); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2300);
+}
+function esc(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+// ════════════════════════════════════════
+//  KEYBOARD
+// ════════════════════════════════════════
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key==='Enter') processInput();
+});
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+renderProjectsList();
+</script>
+</body>
+</html>
